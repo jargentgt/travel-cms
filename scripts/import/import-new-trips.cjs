@@ -51,6 +51,87 @@ function getCategoryForActivity(title) {
   return 'activity' // Default category
 }
 
+function parseCategoryFromDescription(description) {
+  if (!description) return { category: null, cleanDescription: description }
+  
+  // Check for category markers in first line: [{category}], 「{category}], 「{category}」, [{category}」
+  const firstLine = description.split('\n')[0].trim()
+  const categoryPatterns = [
+    /^\[([^\]]+)\]/, // [{category}]
+    /^「([^\]]+)\]/, // 「{category}]
+    /^「([^」]+)」/, // 「{category}」
+    /^\[([^」]+)」/  // [{category}」
+  ]
+  
+  for (const pattern of categoryPatterns) {
+    const match = firstLine.match(pattern)
+    if (match) {
+      const categoryText = match[1].trim()
+      
+      // Map category text to actual category
+      const categoryMapping = {
+        'restaurant': 'restaurant',
+        '餐廳': 'restaurant',
+        '早餐': 'restaurant',
+        '午餐': 'restaurant', 
+        '晚餐': 'restaurant',
+        '宵夜': 'restaurant',
+        '食': 'restaurant',
+        
+        'hotel': 'hotel',
+        '酒店': 'hotel',
+        '住宿': 'hotel',
+        '入住': 'hotel',
+        '退房': 'hotel',
+        
+        'transport': 'transport',
+        '交通': 'transport',
+        '車': 'transport',
+        '電車': 'transport',
+        '船': 'transport',
+        '快艇': 'transport',
+        '飛機': 'airport',
+        '飛': 'airport',
+        
+        'shopping': 'shopping',
+        '購物': 'shopping',
+        '市場': 'shopping',
+        '買': 'shopping',
+        
+        'activity': 'activity',
+        '活動': 'activity',
+        '景點': 'activity',
+        '拍照': 'activity',
+        '博物館': 'activity',
+        '神社': 'activity',
+        '樂園': 'activity',
+        '公園': 'activity',
+        '溫泉': 'activity',
+        '潛水': 'activity',
+        
+        'cafe': 'cafe',
+        '咖啡': 'cafe',
+        '茶': 'cafe',
+        
+        'driving': 'driving',
+        '租車': 'driving',
+        '越野': 'driving',
+        '騎行': 'driving'
+      }
+      
+      const category = categoryMapping[categoryText.toLowerCase()] || 'activity'
+      
+      // Remove the category line from description
+      const remainingLines = description.split('\n').slice(1)
+      const cleanDescription = remainingLines.join('\n').trim()
+      
+      return { category, cleanDescription: cleanDescription || description }
+    }
+  }
+  
+  return { category: null, cleanDescription: description }
+}
+
 function parseCSVData(csvData) {
   const activities = []
   
@@ -76,12 +157,16 @@ function parseCSVData(csvData) {
 
       const timeRange = startTime && endTime ? `${startTime}-${endTime}` : startTime || '全天'
 
+      // Parse category from description first, then fall back to title-based detection
+      const { category: descriptionCategory, cleanDescription } = parseCategoryFromDescription(description)
+      const finalCategory = descriptionCategory || getCategoryForActivity(title)
+
       const activity = {
         time: timeRange,
         title: title,
         location: location || '',
-        description: description || '',
-        category: getCategoryForActivity(title),
+        description: cleanDescription || '',
+        category: finalCategory,
         icon: getIconForActivity(title),
         type: 'normal'
       }
