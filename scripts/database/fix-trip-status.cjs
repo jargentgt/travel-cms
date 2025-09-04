@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const { MongoClient } = require('mongodb')
 const path = require('path')
-require('dotenv').config({ path: path.join(__dirname, '.env') })
+require('dotenv').config({ path: path.join(__dirname, '../..', '.env') })
 
 async function fixTripStatus() {
   const mongoUri = process.env.DATABASE_URI || process.env.MONGODB_URI

@@ -20,6 +20,8 @@
     
     "_comment": "=== Database Management Scripts ===",
     "db:check": "node scripts/database/check-database.cjs",
+    "db:check-trips": "node scripts/database/check-raw-trips.cjs",
+    "db:fix-trip-status": "node scripts/database/fix-trip-status.cjs",
     "db:analyze": "node scripts/database/analyze-trip-references.cjs",
     "db:fix-refs": "node scripts/database/fix-trip-references.cjs",
     "db:fix-refs-prod": "node scripts/database/fix-trip-references-prod.cjs",
@@ -38,7 +40,7 @@
     "update:categories": "node scripts/database/update-activity-categories.cjs",
     
     "_comment5": "=== Shortcuts for common operations ===",
-    "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n  import:new-trips - Import new trips (Taipei, Tokyo, etc)\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n🔄 Data Updates:\\n  update:categories - Update activity categories from description markers\\n\\n❓ Help:\\n  scripts:help - Show this help'"
+    "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:check-trips - Check trips and their status\\n  db:fix-trip-status - Fix trip status (set to published)\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n  import:new-trips - Import new trips (Taipei, Tokyo, etc)\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n🔄 Data Updates:\\n  analyze:markers - Analyze category markers\\n  find:markers - Find specific category markers\\n  inspect:activities - Inspect individual activities\\n  update:categories - Update activity categories from description markers\\n\\n❓ Help:\\n  scripts:help - Show this help'"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "3.54.0",
