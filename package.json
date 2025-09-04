@@ -16,7 +16,22 @@
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test",
-    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
+    "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
+    
+    "_comment": "=== Database Management Scripts ===",
+    "db:check": "node scripts/database/check-database.cjs",
+    "db:analyze": "node scripts/database/analyze-trip-references.cjs",
+    "db:fix-refs": "node scripts/database/fix-trip-references.cjs",
+    "db:fix-refs-prod": "node scripts/database/fix-trip-references-prod.cjs",
+    
+    "_comment2": "=== Import Scripts ===", 
+    "import:trips": "node scripts/import/import-trips-data.js",
+    
+    "_comment3": "=== Trip Management Scripts ===",
+    "trips:fix-days": "node scripts/trips/fix-trip-days.cjs",
+    
+    "_comment4": "=== Shortcuts for common operations ===",
+    "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n❓ Help:\\n  scripts:help - Show this help'"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "3.54.0",
@@ -27,6 +42,7 @@
     "cross-env": "^7.0.3",
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
+    "mongodb": "^6.19.0",
     "next": "15.4.4",
     "papaparse": "^5.4.1",
     "payload": "3.54.0",
