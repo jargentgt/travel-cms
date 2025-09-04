@@ -31,7 +31,10 @@
     "_comment3": "=== Trip Management Scripts ===",
     "trips:fix-days": "node scripts/trips/fix-trip-days.cjs",
     
-    "_comment4": "=== Shortcuts for common operations ===",
+    "_comment4": "=== Data Update Scripts ===",
+    "update:categories": "node scripts/database/update-activity-categories.cjs",
+    
+    "_comment5": "=== Shortcuts for common operations ===",
     "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n❓ Help:\\n  scripts:help - Show this help'"
   },
   "dependencies": {
