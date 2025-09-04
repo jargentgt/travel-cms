@@ -3,7 +3,7 @@ import path from 'path'
 import Papa from 'papaparse'
 import { fileURLToPath } from 'url'
 import { getPayload } from 'payload'
-import config from './src/payload.config.js'
+import config from '../../src/payload.config.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

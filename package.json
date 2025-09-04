@@ -26,6 +26,7 @@
     
     "_comment2": "=== Import Scripts ===", 
     "import:trips": "node scripts/import/import-trips-data.js",
+    "import:new-trips": "node scripts/import/import-new-trips.cjs",
     
     "_comment3": "=== Trip Management Scripts ===",
     "trips:fix-days": "node scripts/trips/fix-trip-days.cjs",

@@ -36,8 +36,8 @@ export const Media: CollectionConfig = {
         width: 1024,
         height: undefined,
         position: 'centre',
-      },
-    ],
+    },
+  ],
     adminThumbnail: 'thumbnail',
     mimeTypes: ['image/*'],
     formatOptions: {

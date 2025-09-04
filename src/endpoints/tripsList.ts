@@ -17,7 +17,7 @@ const tripsList: Endpoint = {
       const url = req.url ? new URL(req.url) : null
       
       // Get query parameters
-      const limit = url ? parseInt(url.searchParams.get('limit') || '10') : 10
+      const limit = url ? parseInt(url.searchParams.get('limit') || '12') : 12
       const page = url ? parseInt(url.searchParams.get('page') || '1') : 1
       const category = url ? url.searchParams.get('category') : null
       const search = url ? url.searchParams.get('search') : null
