@@ -32,6 +32,9 @@
     "trips:fix-days": "node scripts/trips/fix-trip-days.cjs",
     
     "_comment4": "=== Data Update Scripts ===",
+    "analyze:markers": "node scripts/database/analyze-category-markers.cjs",
+    "find:markers": "node scripts/database/find-category-markers.cjs",
+    "inspect:activities": "node scripts/database/inspect-specific-activities.cjs",
     "update:categories": "node scripts/database/update-activity-categories.cjs",
     
     "_comment5": "=== Shortcuts for common operations ===",

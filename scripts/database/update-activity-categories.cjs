@@ -6,17 +6,34 @@ require('dotenv').config({ path: path.join(__dirname, '../..', '.env') })
 function parseCategoryFromDescription(description) {
   if (!description) return { category: null, cleanDescription: description }
   
-  // Check for category markers in first line: [{category}], 「{category}], 「{category}」, [{category}」
-  const firstLine = description.split('\n')[0].trim()
+  // Handle descriptions that might start with newlines - check first few non-empty lines
+  const lines = description.split('\n')
+  let targetLine = ''
+  let targetLineIndex = -1
+  
+  // Find the first non-empty line (that might contain the marker)
+  for (let i = 0; i < Math.min(lines.length, 3); i++) {
+    const line = lines[i].trim()
+    if (line) {
+      targetLine = line
+      targetLineIndex = i
+      break
+    }
+  }
+  
+  if (!targetLine) return { category: null, cleanDescription: description }
+  
+  // More flexible patterns - don't require start of line, handle whitespace
   const categoryPatterns = [
-    /^\[([^\]]+)\]/, // [{category}]
-    /^「([^\]]+)\]/, // 「{category}]
-    /^「([^」]+)」/, // 「{category}」
-    /^\[([^」]+)」/  // [{category}」
+    /\[([^\]]+)\]/,  // [{category}]
+    /「([^\]]+)\]/,  // 「{category}]
+    /「([^」]+)」/,  // 「{category}」
+    /\[([^」]+)」/,   // [{category}」
+    /【([^】]+)】/,  // 【{category}】
   ]
   
   for (const pattern of categoryPatterns) {
-    const match = firstLine.match(pattern)
+    const match = targetLine.match(pattern)
     if (match) {
       const categoryText = match[1].trim()
       
@@ -42,6 +59,8 @@ function parseCategoryFromDescription(description) {
         '電車': 'transport',
         '船': 'transport',
         '快艇': 'transport',
+        '機場': 'airport',
+        'airport': 'airport',
         '飛機': 'airport',
         '飛': 'airport',
         
@@ -73,9 +92,22 @@ function parseCategoryFromDescription(description) {
       
       const category = categoryMapping[categoryText.toLowerCase()] || 'activity'
       
-      // Remove the category line from description
-      const remainingLines = description.split('\n').slice(1)
-      const cleanDescription = remainingLines.join('\n').trim()
+      // Remove the marker from the target line
+      const cleanTargetLine = targetLine.replace(match[0], '').trim()
+      
+      // Rebuild the description
+      let cleanDescription
+      if (cleanTargetLine === '') {
+        // Remove the entire line containing the marker
+        const newLines = [...lines]
+        newLines.splice(targetLineIndex, 1)
+        cleanDescription = newLines.join('\n').trim()
+      } else {
+        // Replace the line with the cleaned version
+        const newLines = [...lines]
+        newLines[targetLineIndex] = cleanTargetLine
+        cleanDescription = newLines.join('\n').trim()
+      }
       
       return { category, cleanDescription: cleanDescription || '', originalMarker: match[0] }
     }
