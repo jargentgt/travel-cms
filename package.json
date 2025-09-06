@@ -29,6 +29,7 @@
     "_comment2": "=== Import Scripts ===", 
     "import:trips": "node scripts/import/import-trips-data.js",
     "import:new-trips": "node scripts/import/import-new-trips.cjs",
+    "re-import:activities": "node scripts/import/re-import-activities.cjs",
     
     "_comment3": "=== Trip Management Scripts ===",
     "trips:fix-days": "node scripts/trips/fix-trip-days.cjs",
@@ -40,7 +41,7 @@
     "update:categories": "node scripts/database/update-activity-categories.cjs",
     
     "_comment5": "=== Shortcuts for common operations ===",
-    "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:check-trips - Check trips and their status\\n  db:fix-trip-status - Fix trip status (set to published)\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n  import:new-trips - Import new trips (Taipei, Tokyo, etc)\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n🔄 Data Updates:\\n  analyze:markers - Analyze category markers\\n  find:markers - Find specific category markers\\n  inspect:activities - Inspect individual activities\\n  update:categories - Update activity categories from description markers\\n\\n❓ Help:\\n  scripts:help - Show this help'"
+    "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:check-trips - Check trips and their status\\n  db:fix-trip-status - Fix trip status (set to published)\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n  import:new-trips - Import new trips (Taipei, Tokyo, etc)\\n  re-import:activities - Re-import activities for Jeju and Osaka 2025 trips\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n🔄 Data Updates:\\n  analyze:markers - Analyze category markers\\n  find:markers - Find specific category markers\\n  inspect:activities - Inspect individual activities\\n  update:categories - Update activity categories from description markers\\n\\n❓ Help:\\n  scripts:help - Show this help'"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "3.54.0",

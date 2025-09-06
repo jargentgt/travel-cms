@@ -1,5 +1,8 @@
-import type { Endpoint } from 'payload'
-import Papa from 'papaparse'
+require('dotenv').config()
+const { MongoClient, ObjectId } = require('mongodb')
+const fs = require('fs')
+const path = require('path')
+const Papa = require('papaparse')
 
 // Icon mapping for different activity types
 const ICON_MAP = {
@@ -33,7 +36,7 @@ const CATEGORY_MAP = {
   '翰林': 'activity', 'Tribe': 'cafe', 'Handammol': 'activity'
 }
 
-function getIconForActivity(title: string): string {
+function getIconForActivity(title) {
   for (const [keyword, icon] of Object.entries(ICON_MAP)) {
     if (title.includes(keyword)) {
       return icon
@@ -42,7 +45,7 @@ function getIconForActivity(title: string): string {
   return '📍' // Default icon
 }
 
-function getCategoryForActivity(title: string): string {
+function getCategoryForActivity(title) {
   for (const [keyword, category] of Object.entries(CATEGORY_MAP)) {
     if (title.includes(keyword)) {
       return category
@@ -52,7 +55,7 @@ function getCategoryForActivity(title: string): string {
 }
 
 // Enhanced category parsing from description (preserving keywords)
-function parseCategoryFromDescription(description: string) {
+function parseCategoryFromDescription(description) {
   if (!description || typeof description !== 'string') {
     return { category: null, originalDescription: description }
   }
@@ -70,7 +73,7 @@ function parseCategoryFromDescription(description: string) {
       const extractedText = match[1].trim()
       
       // Map common category markers to standardized categories
-      const categoryMap: { [key: string]: string } = {
+      const categoryMap = {
         'hotel': 'hotel',
         'accommodation': 'hotel', 
         'lodging': 'hotel',
@@ -107,8 +110,8 @@ function parseCategoryFromDescription(description: string) {
   return { category: null, originalDescription: description }
 }
 
-function parseCSVData(csvData: any[]) {
-  const activities: any[] = []
+function parseCSVData(csvData) {
+  const activities = []
   
   for (const row of csvData) {
     try {
@@ -155,56 +158,63 @@ function parseCSVData(csvData: any[]) {
   return activities
 }
 
-const importActivities: Endpoint = {
-  path: '/import-activities',
-  method: 'post',
-  handler: async (req) => {
-    try {
-      const { payload } = req
+async function reImportActivities() {
+  const mongoUri = process.env.DATABASE_URI || process.env.MONGODB_URI
+  
+  if (!mongoUri) {
+    console.error('❌ DATABASE_URI not found in environment variables')
+    return
+  }
 
-      if (!payload) {
-        return Response.json(
-          { success: false, message: 'Payload instance not available' },
-          { status: 500 }
-        )
+  console.log('🚀 Starting re-import process for 2025 Jeju and Osaka trips...')
+
+  const client = new MongoClient(mongoUri)
+
+  try {
+    await client.connect()
+    const db = client.db('travel-cms') // Use the specific database name
+    const tripsCollection = db.collection('trips')
+    const activitiesCollection = db.collection('activities')
+
+    // CSV files to import (without "imported" in filename)
+    const csvFilesToImport = [
+      {
+        fileName: '68b474b171c114485c247b4b.csv',
+        tripId: '68b474b171c114485c247b4b',
+        tripName: 'Jeju 2025'
+      },
+      {
+        fileName: '68b4748f9c1e2c2f21f4694e.csv', 
+        tripId: '68b4748f9c1e2c2f21f4694e',
+        tripName: 'Osaka 2025'
       }
+    ]
 
-      // Check if request has formData method
-      if (!req.formData) {
-        return Response.json(
-          { success: false, message: 'FormData not supported' },
-          { status: 400 }
-        )
-      }
-
-      // Parse the request body
-      const formData = await req.formData()
-      const csvFile = formData.get('csvFile') as File
-      const tripId = formData.get('tripId') as string
-
-      if (!csvFile || !tripId) {
-        return Response.json(
-          { success: false, message: 'CSV file and trip ID are required' },
-          { status: 400 }
-        )
-      }
-
+    for (const csvFile of csvFilesToImport) {
+      console.log(`\n🗂️  Processing ${csvFile.tripName} (${csvFile.fileName})...`)
+      
       // Verify trip exists
       let trip
       try {
-        trip = await payload.findByID({
-          collection: 'trips',
-          id: tripId
-        })
+        trip = await tripsCollection.findOne({ _id: new ObjectId(csvFile.tripId) })
+        if (!trip) {
+          console.error(`❌ Trip not found: ${csvFile.tripId}`)
+          continue
+        }
+        console.log(`✅ Found trip: ${trip.title}`)
       } catch (error) {
-        return Response.json(
-          { success: false, message: 'Trip not found' },
-          { status: 404 }
-        )
+        console.error(`❌ Error finding trip ${csvFile.tripId}:`, error.message)
+        continue
       }
 
-      // Read CSV file content
-      const csvContent = await csvFile.text()
+      // Read CSV file
+      const csvPath = path.join(__dirname, '../../assets/import-activity', csvFile.fileName)
+      if (!fs.existsSync(csvPath)) {
+        console.error(`❌ CSV file not found: ${csvPath}`)
+        continue
+      }
+
+      const csvContent = fs.readFileSync(csvPath, 'utf8')
       const csvData = Papa.parse(csvContent, { header: true }).data
       console.log(`📊 Parsed ${csvData.length} rows from CSV`)
 
@@ -213,120 +223,88 @@ const importActivities: Endpoint = {
       console.log(`✅ Successfully parsed ${parsedActivities.length} activities`)
 
       if (parsedActivities.length === 0) {
-        return Response.json(
-          { success: false, message: 'No valid activities found in CSV' },
-          { status: 400 }
-        )
+        console.log('⚠️ No valid activities found in CSV')
+        continue
       }
 
-      // Remove existing activities for this trip before importing new ones
+      // Remove existing activities for this trip
       console.log(`🗑️  Removing existing activities for trip: ${trip.title}`)
-      try {
-        const existingActivities = await payload.find({
-          collection: 'activities',
-          where: {
-            trip: { equals: tripId }
-          },
-          limit: 1000 // Set a high limit to get all activities
-        })
-        
-        console.log(`Found ${existingActivities.docs.length} existing activities to remove`)
-        
-        for (const activity of existingActivities.docs) {
-          await payload.delete({
-            collection: 'activities',
-            id: activity.id
-          })
-        }
-        
-        console.log(`✅ Successfully removed ${existingActivities.docs.length} existing activities`)
-      } catch (error) {
-        console.error('⚠️ Error removing existing activities:', error)
-        // Continue with import even if deletion fails
-      }
+      const deleteResult = await activitiesCollection.deleteMany({ 
+        trip: new ObjectId(csvFile.tripId) 
+      })
+      console.log(`✅ Removed ${deleteResult.deletedCount} existing activities`)
 
-      // Import activities
+      // Import new activities
       let createdCount = 0
-      const dayGroups: { [key: string]: string[] } = {}
-      const errors: string[] = []
+      const dayGroups = {}
+      const errors = []
 
       for (const { date, activity } of parsedActivities) {
         try {
           const activityData = {
             ...activity,
             date: new Date(date),
-            trip: tripId,
-            order: createdCount
+            trip: new ObjectId(csvFile.tripId),
+            order: createdCount,
+            status: 'published',
+            createdAt: new Date(),
+            updatedAt: new Date()
           }
 
-          const createdActivity = await payload.create({
-            collection: 'activities',
-            data: activityData
-          })
+          const result = await activitiesCollection.insertOne(activityData)
 
           // Group activities by date for trip days
           const dateKey = new Date(date).toISOString().split('T')[0]
           if (!dayGroups[dateKey]) {
             dayGroups[dateKey] = []
           }
-          dayGroups[dateKey].push(createdActivity.id)
+          dayGroups[dateKey].push(result.insertedId)
 
           createdCount++
           console.log(`✅ Created activity: ${activity.title} (${dateKey})`)
         } catch (error) {
-          const errorMsg = `Error creating activity "${activity.title}": ${error}`
+          const errorMsg = `Error creating activity "${activity.title}": ${error.message}`
           console.error('❌', errorMsg)
           errors.push(errorMsg)
         }
       }
 
-      // Update trip with organized days (completely replace since we removed existing activities)
+      // Update trip with organized days
       const tripDays = Object.entries(dayGroups).map(([dateKey, activityIds]) => ({
         date: new Date(dateKey),
         activities: activityIds
       })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-      await payload.update({
-        collection: 'trips',
-        id: tripId,
-        data: {
-          days: tripDays
+      await tripsCollection.updateOne(
+        { _id: new ObjectId(csvFile.tripId) },
+        { 
+          $set: { 
+            days: tripDays,
+            updatedAt: new Date()
+          } 
         }
-      })
-
-      return Response.json({
-        success: true,
-        message: 'Activities imported successfully',
-        data: {
-          trip: {
-            id: trip.id,
-            title: trip.title,
-            slug: trip.slug
-          },
-          statistics: {
-            activitiesCreated: createdCount,
-            totalProcessed: parsedActivities.length,
-            errors: errors.length,
-            newDays: Object.keys(dayGroups).length
-          },
-          errors: errors.length > 0 ? errors : undefined
-        }
-      })
-
-    } catch (error) {
-      console.error('❌ Import failed:', error)
-      const errorMessage = error instanceof Error ? error.message : String(error)
-      
-      return Response.json(
-        {
-          success: false,
-          message: `Import failed: ${errorMessage}`,
-          data: null
-        },
-        { status: 500 }
       )
+
+      console.log(`🎉 Import completed for ${csvFile.tripName}!`)
+      console.log(`📈 Statistics:`)
+      console.log(`  - Activities created: ${createdCount}`)
+      console.log(`  - Days: ${tripDays.length}`)
+      console.log(`  - Errors: ${errors.length}`)
+
+      if (errors.length > 0) {
+        console.log(`⚠️ Errors encountered:`)
+        errors.forEach(error => console.log(`  - ${error}`))
+      }
     }
-  },
+
+    console.log(`\n✅ All imports completed successfully!`)
+
+  } catch (error) {
+    console.error('❌ Import failed:', error)
+  } finally {
+    await client.close()
+  }
 }
 
-export default importActivities 
+// Run the import
+reImportActivities().catch(console.error) 
