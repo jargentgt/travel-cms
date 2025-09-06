@@ -4,7 +4,8 @@ export const Activities: CollectionConfig = {
   slug: 'activities',
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'trip', 'date', 'time', 'type', 'category'],
+    defaultColumns: ['title', 'trip', 'date', 'time', 'type', 'category', 'coordinates'],
+    listSearchableFields: ['title', 'location', 'description'],
   },
   access: {
     read: () => true, // Public access for frontend
@@ -32,6 +33,54 @@ export const Activities: CollectionConfig = {
       admin: {
         description: 'Specific location for this activity',
       },
+    },
+    {
+      name: 'coordinates',
+      type: 'group',
+      admin: {
+        description: '📍 GPS coordinates for the activity location (auto-populated during import)',
+        style: {
+          backgroundColor: '#f0f9ff',
+          border: '1px solid #0284c7', 
+          borderRadius: '8px',
+          padding: '16px',
+        },
+      },
+      fields: [
+        {
+          name: 'lat',
+          type: 'number',
+          admin: {
+            description: 'Latitude coordinate',
+            step: 0.000001,
+            width: '50%',
+          },
+        },
+        {
+          name: 'lng', 
+          type: 'number',
+          admin: {
+            description: 'Longitude coordinate',
+            step: 0.000001,
+            width: '50%',
+          },
+        },
+        {
+          name: 'source',
+          type: 'select',
+          defaultValue: 'google',
+          options: [
+            { label: '🌐 Google Geocoding API', value: 'google' },
+            { label: '🔗 Extracted from URL', value: 'extracted' },
+            { label: '✋ Manual Input', value: 'manual' },
+            { label: '📥 CSV Import', value: 'imported' },
+          ],
+          admin: {
+            description: 'How these coordinates were obtained',
+            width: '100%',
+          },
+        },
+      ],
     },
     {
       name: 'description',

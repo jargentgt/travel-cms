@@ -5,43 +5,29 @@
   "license": "MIT",
   "type": "module",
   "scripts": {
-    "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build",
-    "build:railway": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" SKIP_ENV_VALIDATION=true next build",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
-    "devsafe": "rm -rf .next && cross-env NODE_OPTIONS=--no-deprecation next dev",
-    "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
-    "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
-    "lint": "cross-env NODE_OPTIONS=--no-deprecation next lint",
+    "lint": "pnpm exec eslint .",
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
     
-    "_comment": "=== Database Management Scripts ===",
+    "_comment": "=== Core Operations ===",
     "db:check": "node scripts/database/check-database.cjs",
-    "db:check-trips": "node scripts/database/check-raw-trips.cjs",
     "db:fix-trip-status": "node scripts/database/fix-trip-status.cjs",
-    "db:analyze": "node scripts/database/analyze-trip-references.cjs",
-    "db:fix-refs": "node scripts/database/fix-trip-references.cjs",
-    "db:fix-refs-prod": "node scripts/database/fix-trip-references-prod.cjs",
     
-    "_comment2": "=== Import Scripts ===", 
-    "import:trips": "node scripts/import/import-trips-data.js",
-    "import:new-trips": "node scripts/import/import-new-trips.cjs",
+    "_comment2": "=== Import & Data Management ===", 
+    "import:trips": "node scripts/import/import-new-trips.cjs",
     "re-import:activities": "node scripts/import/re-import-activities.cjs",
-    
-    "_comment3": "=== Trip Management Scripts ===",
-    "trips:fix-days": "node scripts/trips/fix-trip-days.cjs",
-    
-    "_comment4": "=== Data Update Scripts ===",
-    "analyze:markers": "node scripts/database/analyze-category-markers.cjs",
-    "find:markers": "node scripts/database/find-category-markers.cjs",
-    "inspect:activities": "node scripts/database/inspect-specific-activities.cjs",
+    "add:coordinates": "node scripts/database/add-coordinates-to-activities-with-geocoding.cjs",
+    "add:coordinates:optimized": "node scripts/database/add-coordinates-to-activities-with-geocoding-optimized.cjs",
+    "test:coordinates:optimized": "node scripts/database/test-coordinates-optimized-2-activities.cjs",
     "update:categories": "node scripts/database/update-activity-categories.cjs",
     
-    "_comment5": "=== Shortcuts for common operations ===",
-    "scripts:help": "echo '📋 Available CMS Scripts:\\n\\n🗄️  Database:\\n  db:check - Check database contents\\n  db:check-trips - Check trips and their status\\n  db:fix-trip-status - Fix trip status (set to published)\\n  db:analyze <mongoUri> - Analyze trip references\\n  db:fix-refs - Fix trip references (local)\\n  db:fix-refs-prod <mongoUri> - Fix trip references (production)\\n\\n📥 Import:\\n  import:trips - Import trips from CSV\\n  import:new-trips - Import new trips (Taipei, Tokyo, etc)\\n  re-import:activities - Re-import activities for Jeju and Osaka 2025 trips\\n\\n🗓️  Trips:\\n  trips:fix-days <tripId> <startDate> - Fix trip day mappings\\n\\n🔄 Data Updates:\\n  analyze:markers - Analyze category markers\\n  find:markers - Find specific category markers\\n  inspect:activities - Inspect individual activities\\n  update:categories - Update activity categories from description markers\\n\\n❓ Help:\\n  scripts:help - Show this help'"
+    "_comment3": "=== Help ===",
+    "scripts:help": "echo '🚀 Travel CMS Scripts:' && echo '' && echo '📊 Quick Start:' && echo '  npm run import:trips     # Import trips from CSV' && echo '  npm run import:activities # Import activities via API' && echo '  npm run re-import:activities # Re-import specific trips' && echo '  npm run add:coordinates  # Add coordinates to activities' && echo '' && echo '🔧 Database:' && echo '  npm run update:categories # Update activity categories' && echo '  npm run add:coordinates  # Add coordinates with geocoding (original)' && echo '  npm run add:coordinates:optimized # Add coordinates (prevents duplicate API calls)' && echo '  npm run test:coordinates:optimized # Test 2 activities with optimization' && echo '' && echo '💡 Development:' && echo '  npm run dev              # Start development server' && echo '  npm run build            # Build for production' && echo '' && echo '📚 Help:' && echo '  npm run scripts:help    # Show this help'"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "3.54.0",

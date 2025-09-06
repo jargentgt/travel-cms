@@ -68,7 +68,7 @@ const tripDetail: Endpoint = {
 
       // Group activities by date
       const activitiesByDate: { [key: string]: any[] } = {}
-      activities.docs.forEach(activity => {
+      activities.docs.forEach((activity: any) => {
         const dateKey = new Date(activity.date).toISOString().split('T')[0]
         if (!activitiesByDate[dateKey]) {
           activitiesByDate[dateKey] = []
@@ -82,7 +82,8 @@ const tripDetail: Endpoint = {
           category: activity.category,
           type: activity.type,
           icon: activity.icon,
-          order: activity.order
+          order: activity.order,
+          coordinates: activity.coordinates
         })
       })
 

@@ -3,6 +3,49 @@ const { MongoClient, ObjectId } = require('mongodb')
 const path = require('path')
 const fs = require('fs')
 const Papa = require('papaparse')
+
+// Import geocoding utilities (converted to CommonJS)
+const { extractCoordinatesFromText, getActivityCoordinates, detectRegionFromAddress } = (() => {
+  function extractCoordinatesFromText(text) {
+    if (!text) return null
+
+    const patterns = [
+      /@(-?\d+\.\d+),(-?\d+\.\d+)/,          // @lat,lng
+      /ll=(-?\d+\.\d+),(-?\d+\.\d+)/,        // ll=lat,lng  
+      /q=(-?\d+\.\d+),(-?\d+\.\d+)/,         // q=lat,lng
+      /(-?\d+\.\d+),\s*(-?\d+\.\d+)/,        // lat, lng
+      /lat[:\s]+(-?\d+\.\d+).*lng[:\s]+(-?\d+\.\d+)/i, // lat: X lng: Y
+      /latitude[:\s]+(-?\d+\.\d+).*longitude[:\s]+(-?\d+\.\d+)/i, // latitude: X longitude: Y
+    ]
+
+    for (const pattern of patterns) {
+      const match = text.match(pattern)
+      if (match) {
+        const lat = parseFloat(match[1])
+        const lng = parseFloat(match[2])
+        
+        if (!isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+          return { lat, lng, source: 'extracted' }
+        }
+      }
+    }
+    return null
+  }
+
+  async function getActivityCoordinates(location, description = '') {
+    const textToSearch = `${description} ${location}`.toLowerCase()
+    const extracted = extractCoordinatesFromText(textToSearch)
+    if (extracted) {
+      console.log(`📍 [IMPORT] Extracted coordinates for "${location}":`, extracted)
+      return extracted
+    }
+    
+    console.log(`⚠️ [IMPORT] No coordinates found for "${location}" (geocoding API not configured)`)
+    return null
+  }
+
+  return { extractCoordinatesFromText, getActivityCoordinates }
+})()
 require('dotenv').config({ path: path.join(__dirname, '../..', '.env') })
 
 // Icon mapping for different activity types
@@ -164,7 +207,7 @@ function parseCategoryFromDescription(description) {
   return { category: null, cleanDescription: description }
 }
 
-function parseCSVData(csvData) {
+async function parseCSVData(csvData) {
   const activities = []
   
   for (const row of csvData) {
@@ -193,6 +236,12 @@ function parseCSVData(csvData) {
       const { category: descriptionCategory, cleanDescription } = parseCategoryFromDescription(description)
       const finalCategory = descriptionCategory || getCategoryForActivity(title)
 
+      // Generate coordinates for the activity location (COST SAVING!)
+      let coordinates = null
+      if (location && location.trim()) {
+        coordinates = await getActivityCoordinates(location.trim(), cleanDescription || '')
+      }
+
       const activity = {
         time: timeRange,
         title: title,
@@ -200,7 +249,8 @@ function parseCSVData(csvData) {
         description: cleanDescription || '',
         category: finalCategory,
         icon: getIconForActivity(title),
-        type: 'normal'
+        type: 'normal',
+        coordinates: coordinates // Add pre-calculated coordinates
       }
 
       activities.push({ date, activity })
@@ -293,9 +343,10 @@ async function importNewTrips() {
       const csvData = Papa.parse(csvContent, { header: true }).data
       console.log(`📊 Parsed ${csvData.length} rows from CSV`)
 
-      // Parse activities from CSV
-      const parsedActivities = parseCSVData(csvData)
-      console.log(`✅ Successfully parsed ${parsedActivities.length} activities`)
+      // Parse activities from CSV with coordinate generation
+      console.log(`🔄 Parsing activities and generating coordinates...`)
+      const parsedActivities = await parseCSVData(csvData)
+      console.log(`✅ Successfully parsed ${parsedActivities.length} activities with coordinates`)
 
       if (parsedActivities.length === 0) {
         console.log('⚠️ No valid activities found in CSV')

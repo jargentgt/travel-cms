@@ -1,5 +1,6 @@
 import type { Endpoint } from 'payload'
 import Papa from 'papaparse'
+import { getActivityCoordinates } from '../utils/geocoding'
 
 // Icon mapping for different activity types
 const ICON_MAP = {
@@ -107,7 +108,7 @@ function parseCategoryFromDescription(description: string) {
   return { category: null, originalDescription: description }
 }
 
-function parseCSVData(csvData: any[]) {
+async function parseCSVData(csvData: any[]) {
   const activities: any[] = []
   
   for (const row of csvData) {
@@ -136,6 +137,12 @@ function parseCSVData(csvData: any[]) {
       const { category: descriptionCategory, originalDescription } = parseCategoryFromDescription(description)
       const finalCategory = descriptionCategory || getCategoryForActivity(title)
 
+      // Generate coordinates for the activity location (COST SAVING!)
+      let coordinates = null
+      if (location && location.trim()) {
+        coordinates = await getActivityCoordinates(location.trim(), originalDescription || '')
+      }
+
       const activity = {
         time: timeRange,
         title: title,
@@ -143,7 +150,8 @@ function parseCSVData(csvData: any[]) {
         description: originalDescription || '', // Keep original description with category keywords
         category: finalCategory,
         icon: getIconForActivity(title),
-        type: 'normal'
+        type: 'normal',
+        coordinates: coordinates // Add pre-calculated coordinates
       }
 
       activities.push({ date, activity })
@@ -208,9 +216,9 @@ const importActivities: Endpoint = {
       const csvData = Papa.parse(csvContent, { header: true }).data
       console.log(`📊 Parsed ${csvData.length} rows from CSV`)
 
-      // Parse activities from CSV
-      const parsedActivities = parseCSVData(csvData)
-      console.log(`✅ Successfully parsed ${parsedActivities.length} activities`)
+      // Parse activities from CSV with coordinate generation
+      const parsedActivities = await parseCSVData(csvData)
+      console.log(`✅ Successfully parsed ${parsedActivities.length} activities with coordinates`)
 
       if (parsedActivities.length === 0) {
         return Response.json(
@@ -282,7 +290,7 @@ const importActivities: Endpoint = {
 
       // Update trip with organized days (completely replace since we removed existing activities)
       const tripDays = Object.entries(dayGroups).map(([dateKey, activityIds]) => ({
-        date: new Date(dateKey),
+        date: dateKey, // Keep as string format (YYYY-MM-DD)
         activities: activityIds
       })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
