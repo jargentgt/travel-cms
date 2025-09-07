@@ -41,11 +41,6 @@ export const Activities: CollectionConfig = {
         description: '📍 Latitude coordinate (auto-populated during import)',
         step: 0.000001,
         width: '50%',
-        style: {
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #0284c7',
-          borderRadius: '4px',
-        },
       },
     },
     {
@@ -55,11 +50,6 @@ export const Activities: CollectionConfig = {
         description: '📍 Longitude coordinate (auto-populated during import)',
         step: 0.000001,
         width: '50%',
-        style: {
-          backgroundColor: '#f0f9ff',
-          border: '1px solid #0284c7',
-          borderRadius: '4px',
-        },
       },
     },
     {
