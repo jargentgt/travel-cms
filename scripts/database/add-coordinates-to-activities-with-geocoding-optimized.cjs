@@ -144,9 +144,12 @@ async function addCoordinatesToActivitiesOptimized() {
     const activitiesQuery = {
       location: { $exists: true, $ne: '', $ne: null },
       $or: [
-        { coordinates: { $exists: false } },                    // No coordinates at all
-        { 'coordinates.source': { $ne: 'google' } },            // Has coordinates but not from Google API
-        { 'coordinates.source': { $exists: false } }            // Has coordinates but no source field
+        { latitude: { $exists: false } },                       // No coordinates at all
+        { longitude: { $exists: false } },                      // No coordinates at all
+        { coordinatesSource: { $ne: 'google' } },               // Has coordinates but not from Google API
+        { coordinatesSource: { $exists: false } },              // Has coordinates but no source field
+        // Also include old coordinate structure for migration
+        { coordinates: { $exists: true }, latitude: { $exists: false } }  // Has old coordinates but not new ones
       ]
     }
 
@@ -156,7 +159,9 @@ async function addCoordinatesToActivitiesOptimized() {
     })
     const googleGeocodedActivities = await activitiesCollection.countDocuments({
       location: { $exists: true, $ne: '', $ne: null },
-      'coordinates.source': 'google'
+      coordinatesSource: 'google',
+      latitude: { $exists: true },
+      longitude: { $exists: true }
     })
     const activitiesNeedingProcessing = await activitiesCollection.countDocuments(activitiesQuery)
 
@@ -179,6 +184,7 @@ async function addCoordinatesToActivitiesOptimized() {
     let geocodedCount = 0
     let skippedCount = 0
     let alreadyGoogleGeocodedCount = 0
+    let invalidLocationCount = 0
     let apiCallCount = 0
 
     // Estimate costs only for activities that will actually call the API
@@ -193,18 +199,24 @@ async function addCoordinatesToActivitiesOptimized() {
       try {
         console.log(`🔍 Processing: ${activity.title}`)
         console.log(`📍 Location: "${activity.location}"`)
+
+        if (!activity.location || activity.location === '' || activity.location === null) {
+          console.log(`✅ Location not exist, skipping...`)
+          invalidLocationCount++
+          continue
+        }
         
-        // Check if this activity already has Google-sourced coordinates (should be rare due to query)
-        if (activity.coordinates && activity.coordinates.source === 'google') {
+        // Check if this activity already has Google-sourced coordinates
+        if (activity.coordinatesSource === 'google' && activity.latitude && activity.longitude) {
           console.log(`✅ Already has Google coordinates, skipping...`)
           alreadyGoogleGeocodedCount++
           continue
         }
         
         // Check if this activity already has any coordinates
-        if (activity.coordinates && activity.coordinates.lat && activity.coordinates.lng) {
-          console.log(`ℹ️  Has coordinates from source: ${activity.coordinates.source || 'unknown'}`)
-          console.log(`📍 Existing coordinates: ${activity.coordinates.lat}, ${activity.coordinates.lng}`)
+        if (activity.latitude && activity.longitude) {
+          console.log(`ℹ️  Has coordinates from source: ${activity.coordinatesSource || 'unknown'}`)
+          console.log(`📍 Existing coordinates: ${activity.latitude}, ${activity.longitude}`)
           
           // You could choose to skip these entirely or try to improve them with Google geocoding
           // For cost optimization, let's skip activities that already have any valid coordinates
@@ -212,6 +224,8 @@ async function addCoordinatesToActivitiesOptimized() {
           skippedCount++
           continue
         }
+
+        
         
         let coordinates = null
 
@@ -242,9 +256,15 @@ async function addCoordinatesToActivitiesOptimized() {
             { _id: activity._id },
             { 
               $set: { 
-                coordinates: coordinates,
+                latitude: coordinates.lat,
+                longitude: coordinates.lng,
+                coordinatesSource: coordinates.source,
                 updatedAt: new Date()
-              } 
+              },
+              // Remove old coordinates field if it exists
+              $unset: {
+                coordinates: ""
+              }
             }
           )
           
@@ -274,6 +294,7 @@ async function addCoordinatesToActivitiesOptimized() {
     console.log(`  - Coordinates geocoded via API: ${geocodedCount}`)
     console.log(`  - Already had Google coordinates: ${alreadyGoogleGeocodedCount}`)
     console.log(`  - Skipped (no coordinates found): ${skippedCount}`)
+    console.log(`  - Invalid location: ${invalidLocationCount}`)
     console.log(`  - Google API calls made: ${apiCallCount}`)
     console.log(`  - API calls prevented: ${googleGeocodedActivities}`)
     console.log(`💰 Total cost: $${((apiCallCount * 5) / 1000).toFixed(3)}`)

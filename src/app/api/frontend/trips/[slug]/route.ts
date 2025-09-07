@@ -62,7 +62,7 @@ export async function GET(
       },
       limit: 1000,
       sort: ['date', 'order'],
-      depth: 1
+      depth: 0
     })
 
     // Group activities by date
@@ -72,6 +72,13 @@ export async function GET(
       if (!activitiesByDate[dateKey]) {
         activitiesByDate[dateKey] = []
       }
+      // Create coordinates object from flattened fields for frontend compatibility
+      const coordinates = activity.latitude && activity.longitude ? {
+        lat: activity.latitude,
+        lng: activity.longitude,
+        source: activity.coordinatesSource || 'google'
+      } : null
+
       activitiesByDate[dateKey].push({
         id: activity.id,
         title: activity.title,
@@ -81,7 +88,8 @@ export async function GET(
         category: activity.category,
         type: activity.type,
         icon: activity.icon,
-        order: activity.order
+        order: activity.order,
+        coordinates: coordinates
       })
     })
 

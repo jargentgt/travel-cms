@@ -24,11 +24,10 @@
     "re-import:activities": "node scripts/import/re-import-activities.cjs",
     "add:coordinates": "node scripts/database/add-coordinates-to-activities-with-geocoding.cjs",
     "add:coordinates:optimized": "node scripts/database/add-coordinates-to-activities-with-geocoding-optimized.cjs",
-    "test:coordinates:optimized": "node scripts/database/test-coordinates-optimized-2-activities.cjs",
     "update:categories": "node scripts/database/update-activity-categories.cjs",
     
     "_comment3": "=== Help ===",
-    "scripts:help": "echo '🚀 Travel CMS Scripts:' && echo '' && echo '📊 Quick Start:' && echo '  npm run import:trips     # Import trips from CSV' && echo '  npm run import:activities # Import activities via API' && echo '  npm run re-import:activities # Re-import specific trips' && echo '  npm run add:coordinates  # Add coordinates to activities' && echo '' && echo '🔧 Database:' && echo '  npm run update:categories # Update activity categories' && echo '  npm run add:coordinates  # Add coordinates with geocoding (original)' && echo '  npm run add:coordinates:optimized # Add coordinates (prevents duplicate API calls)' && echo '  npm run test:coordinates:optimized # Test 2 activities with optimization' && echo '' && echo '💡 Development:' && echo '  npm run dev              # Start development server' && echo '  npm run build            # Build for production' && echo '' && echo '📚 Help:' && echo '  npm run scripts:help    # Show this help'"
+    "scripts:help": "echo '🚀 Travel CMS Scripts:' && echo '' && echo '📊 Quick Start:' && echo '  npm run import:trips     # Import trips from CSV' && echo '  npm run import:activities # Import activities via API' && echo '  npm run re-import:activities # Re-import specific trips' && echo '  npm run add:coordinates  # Add coordinates to activities' && echo '' && echo '🔧 Database:' && echo '  npm run update:categories # Update activity categories' && echo '  npm run add:coordinates  # Add coordinates with geocoding (original)' && echo '  npm run add:coordinates:optimized # Add coordinates (prevents duplicate API calls)' && echo '' && echo '💡 Development:' && echo '  npm run dev              # Start development server' && echo '  npm run build            # Build for production' && echo '' && echo '📚 Help:' && echo '  npm run scripts:help    # Show this help'"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "3.54.0",

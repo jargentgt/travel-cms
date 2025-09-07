@@ -147,7 +147,7 @@ export interface User {
  */
 export interface Media {
   id: string;
-  alt: string;
+  alt?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -255,6 +255,18 @@ export interface Activity {
    * Specific location for this activity
    */
   location?: string | null;
+  /**
+   * 📍 Latitude coordinate (auto-populated during import)
+   */
+  latitude?: number | null;
+  /**
+   * 📍 Longitude coordinate (auto-populated during import)
+   */
+  longitude?: number | null;
+  /**
+   * How these coordinates were obtained
+   */
+  coordinatesSource?: ('google' | 'extracted' | 'manual' | 'imported') | null;
   /**
    * Activity description or notes
    */
@@ -458,6 +470,9 @@ export interface ActivitiesSelect<T extends boolean = true> {
   title?: T;
   time?: T;
   location?: T;
+  latitude?: T;
+  longitude?: T;
+  coordinatesSource?: T;
   description?: T;
   category?: T;
   type?: T;

@@ -9,10 +9,10 @@ const nextConfig = {
     // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
-  // Configure upload size limits for Railway
+  // Configure external packages for server components
+  serverExternalPackages: ['mongodb'],
   experimental: {
-    // Enable larger file uploads
-    serverComponentsExternalPackages: [],
+    // Enable larger file uploads - removed deprecated serverComponentsExternalPackages
   },
   // Increase body size limit for file uploads
   serverRuntimeConfig: {
@@ -32,6 +32,27 @@ const nextConfig = {
       '.mjs': ['.mts', '.mjs'],
       '.js': ['.ts', '.tsx', '.jsx', '.js'],
     }
+
+    // Fix MongoDB AWS SDK dependency issues
+    webpackConfig.resolve.fallback = {
+      ...webpackConfig.resolve.fallback,
+      'aws4': false,
+      'aws-crt': false,
+      '@aws-sdk/signature-v4-crt': false,
+      '@aws-sdk/client-sso-oidc': false,
+      'mongodb-client-encryption': false,
+      'kerberos': false,
+      'snappy': false,
+    }
+
+    // Ignore optional dependencies that cause warnings
+    webpackConfig.ignoreWarnings = [
+      { module: /aws4/ },
+      { module: /@aws-sdk/ },
+      { module: /mongodb-client-encryption/ },
+      { module: /kerberos/ },
+      { module: /snappy/ },
+    ]
 
     return webpackConfig
   },

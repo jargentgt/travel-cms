@@ -12,8 +12,6 @@ import { Media } from './collections/Media'
 import { Trips } from './collections/Trips'
 import { Activities } from './collections/Activities'
 import updateActivitiesCategories from './endpoints/updateActivitiesCategories'
-import tripsList from './endpoints/tripsList'
-import tripDetail from './endpoints/tripDetail'
 import importTrip from './endpoints/importTrip'
 import importActivities from './endpoints/importActivities'
 import test from './endpoints/test'
@@ -44,12 +42,14 @@ export default buildConfig({
   },
   collections: [Users, Media, Trips, Activities],
   endpoints: [
-    updateActivitiesCategories,
-    tripsList,
-    tripDetail,
+    // Admin/Import endpoints (no Next.js equivalent)
     importTrip,
-    importActivities,
-    test
+    importActivities, 
+    updateActivitiesCategories,
+    test,
+    // ❌ REMOVED duplicates:
+    // tripDetail,  // Using Next.js API route instead
+    // tripsList,   // Using Next.js API route instead
   ],
   cors: getCorsOrigins(),
   editor: lexicalEditor(),
